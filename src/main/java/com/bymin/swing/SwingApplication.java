@@ -1,24 +1,47 @@
 package com.bymin.swing;
 
-import com.bymin.swing.app.AppFrame;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 @SpringBootApplication
-public class SwingApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(SwingApplication.class, args);
-        System.setProperty("java.awt.headless", "false"); //Disables headless
-        SwingUtilities.invokeLater(() -> {
-            AppFrame frame = new AppFrame();
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(400, 400);
-            frame.setVisible(true);
-        });
+public class SwingApplication extends JFrame {
+    public SwingApplication() {
+        initUI();
     }
 
+    private void initUI() {
+        var quitButton = new JButton("Quit");
+        quitButton.addActionListener((ActionEvent event) -> {
+            System.exit(0);
+        });
+
+        createLayout(quitButton);
+        setTitle("Quit button");
+        setSize(300, 200);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    // http://zetcode.com/articles/springbootswing/
+    private void createLayout(JComponent... arg) {
+        var pane = getContentPane();
+        var gl = new GroupLayout(pane);
+        pane.setLayout(gl);
+        gl.setAutoCreateContainerGaps(true);
+        gl.setHorizontalGroup(gl.createSequentialGroup().addComponent(arg[0]));
+        gl.setVerticalGroup(gl.createSequentialGroup().addComponent(arg[0]));
+    }
+
+    public static void main(String[] args) {
+        var ctx = new SpringApplicationBuilder(SwingApplication.class).headless(false).run(args);
+        EventQueue.invokeLater(() -> {
+            var ex = ctx.getBean(SwingApplication.class);
+            ex.setVisible(true);
+        });
+    }
 }

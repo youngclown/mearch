@@ -27,8 +27,6 @@ public abstract class FileInSearch implements FileSearch {
         }
     }
 
-
-
     public void filePlay(File file,
                          final String[] inKeyword,
                          final String[] orKeyword,
