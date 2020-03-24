@@ -5,7 +5,7 @@ import java.io.File;
 public class FileUtil {
 
     public static File[] fileList(String filename) {
-        File folder = new File(filename);
+        var folder = new File(filename);
         return folder.listFiles();
     }
 

@@ -1,13 +1,31 @@
 package com.bymin.swing.search;
 
 import com.bymin.swing.util.FileUtil;
+import lombok.Getter;
+import lombok.ToString;
+import org.springframework.util.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
+@Getter
+@ToString
 public abstract class FileInSearch implements FileSearch {
+    String readPath = "";
+    String outPath = "";
+    String[] inKeyword = {","};
+    String[] orKeyword = {};
+    String[] exceptKeyword = {};
+
+    // 1. Log collection
+    // 2. Log array pattern
+    boolean[] logArray = {true, true}; // log array count, log collect
+
+    // if log arry
+    String splitArray = ",";    // tap , "" 등
+    int splitPos = 0;
+
+    // deafult : -1
+    int sample = 10;    // sample count > -1 is count playing
 
     public void returnFileInSearch(
             final String PATH,
@@ -15,13 +33,13 @@ public abstract class FileInSearch implements FileSearch {
             final String[] orKeyword,
             final String[] exceptKeyword) {
 
-        File[] listOfFiles = FileUtil.fileList(PATH);
+        var listOfFiles = FileUtil.fileList(PATH);
 
         if (listOfFiles == null) {
-            File file = new File(PATH);
+            var file = new File(PATH);
             filePlay(file, inKeyword, orKeyword, exceptKeyword);
         } else {
-            for (File file : listOfFiles) {
+            for (var file : listOfFiles) {
                 filePlay(file, inKeyword, orKeyword, exceptKeyword);
             }
         }
@@ -31,11 +49,23 @@ public abstract class FileInSearch implements FileSearch {
                          final String[] inKeyword,
                          final String[] orKeyword,
                          final String[] exceptKeyword) {
+        int count = 0;
         try (FileReader fileReader = new FileReader(file);
              BufferedReader bufReader = new BufferedReader(fileReader)){
-
             String line;
+
+            BufferedWriter bw = null;
+            if (StringUtils.isEmpty(outPath)) {
+                FileWriter fw = new FileWriter(outPath); // 절대주소 경로 가능
+                bw = new BufferedWriter(fw);
+            }
             while ((line = bufReader.readLine()) != null) {
+
+                if (getSample() != -1) {
+                    count++;
+                    if (count >= getSample()) break;
+                }
+
                 boolean patternOn = false;  // 패턴에 맞을 경우
 
                 if (orKeyword != null) {
@@ -70,15 +100,20 @@ public abstract class FileInSearch implements FileSearch {
                     }
                 }
 
-                //
                 if (patternOn) {
                     try {
+                        if (bw != null && getLogArray()[0]) {
+                            bw.write(line);
+                            bw.newLine(); // 줄바꿈
+                        }
                         checkPattern(line);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
+
+            if (bw != null) bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
