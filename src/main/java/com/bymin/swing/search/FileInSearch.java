@@ -10,53 +10,59 @@ import java.io.*;
 @Getter
 @ToString
 public abstract class FileInSearch implements FileSearch {
-    String readPath = "";
-    String outPath = "";
-    String[] inKeyword = {","};
-    String[] orKeyword = {};
-    String[] exceptKeyword = {};
+    final String readPath;
+    final String outPath;
+    final String[] inKeyword;
+    final String[] orKeyword;
+    final String[] exceptKeyword;
 
     // 1. Log collection
     // 2. Log array pattern
-    boolean[] logArray = {true, true}; // log array count, log collect
+    final boolean[] logArray; // log array count, log collect
 
     // if log arry
-    String splitArray = ",";    // tap , "" 등
-    int splitPos = 0;
+    final String splitArray;    // tap , "" 등
+    final int splitPos;
 
     // deafult : -1
-    int sample = 10;    // sample count > -1 is count playing
+    final int sample;    // sample count > -1 is count playing,  = 10
 
-    public void returnFileInSearch(
-            final String PATH,
-            final String[] inKeyword,
-            final String[] orKeyword,
-            final String[] exceptKeyword) {
+    public FileInSearch(String readPath,String outPath,String[] inKeyword,String[] orKeyword,String[] exceptKeyword,boolean[] logArray,String splitArray,int splitPos,int sample) {
+        this.readPath = readPath;
+        this.outPath = outPath;
+        this.inKeyword = inKeyword;
+        this.orKeyword = orKeyword;
+        this.exceptKeyword = exceptKeyword;
+        this.logArray = logArray; //  = {true, true}
+        this.splitArray = splitArray; // ","
+        this.splitPos = splitPos;
+        this.sample = sample; //
 
-        var listOfFiles = FileUtil.fileList(PATH);
+    }
+
+    public void returnFileInSearch() {
+
+        var listOfFiles = FileUtil.fileList(getReadPath());
 
         if (listOfFiles == null) {
-            var file = new File(PATH);
-            filePlay(file, inKeyword, orKeyword, exceptKeyword);
+            var file = new File(getReadPath());
+            filePlay(file);
         } else {
             for (var file : listOfFiles) {
-                filePlay(file, inKeyword, orKeyword, exceptKeyword);
+                filePlay(file);
             }
         }
     }
 
-    public void filePlay(File file,
-                         final String[] inKeyword,
-                         final String[] orKeyword,
-                         final String[] exceptKeyword) {
+    public void filePlay(File file) {
         int count = 0;
         try (FileReader fileReader = new FileReader(file);
              BufferedReader bufReader = new BufferedReader(fileReader)){
             String line;
 
             BufferedWriter bw = null;
-            if (StringUtils.isEmpty(outPath)) {
-                FileWriter fw = new FileWriter(outPath); // 절대주소 경로 가능
+            if (StringUtils.isEmpty(getOutPath())) {
+                FileWriter fw = new FileWriter(getOutPath());
                 bw = new BufferedWriter(fw);
             }
             while ((line = bufReader.readLine()) != null) {
@@ -68,9 +74,9 @@ public abstract class FileInSearch implements FileSearch {
 
                 boolean patternOn = false;  // 패턴에 맞을 경우
 
-                if (orKeyword != null) {
+                if (getOrKeyword() != null) {
                     // 해당 배열이 or 조건으로 존재하면 무조건 true
-                    for (String keyword : orKeyword) {
+                    for (String keyword : getOrKeyword()) {
                         if (line.contains(keyword)) {
                             patternOn = true;
                             break;
@@ -78,9 +84,9 @@ public abstract class FileInSearch implements FileSearch {
                     }
                 }
 
-                if (inKeyword != null) {
+                if (getInKeyword() != null) {
                     // 해당 배열이 전부 있어야 함.
-                    for (String keyword : inKeyword) {
+                    for (String keyword : getInKeyword()) {
                         // or 조건절에서 true가 있다면, and 조건절의 keyword가 없더라도  true를 유지한다.
                         // 키워드가 없거나, or 조건절의 true가 없다면... false 처리.
                         if (!line.contains(keyword) || !patternOn) {
@@ -91,8 +97,8 @@ public abstract class FileInSearch implements FileSearch {
                 }
 
                 // 해당 배열이 하나라도 있으면 false
-                if (exceptKeyword != null && patternOn && exceptKeyword.length > 0) {
-                    for (String keyword : exceptKeyword) {
+                if (getExceptKeyword() != null && patternOn && getExceptKeyword().length > 0) {
+                    for (String keyword : getExceptKeyword()) {
                         if (line.contains(keyword)) {
                             patternOn = false;
                             break;
