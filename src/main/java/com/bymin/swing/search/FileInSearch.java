@@ -57,14 +57,15 @@ public abstract class FileInSearch implements FileSearch {
     public void filePlay(File file) {
         int count = 0;
         try (FileReader fileReader = new FileReader(file);
-             BufferedReader bufReader = new BufferedReader(fileReader)){
+            BufferedReader bufReader = new BufferedReader(fileReader)){
             String line;
 
             BufferedWriter bw = null;
-            if (StringUtils.isEmpty(getOutPath())) {
+            if (!StringUtils.isEmpty(getOutPath())) {
                 FileWriter fw = new FileWriter(getOutPath());
                 bw = new BufferedWriter(fw);
             }
+
             while ((line = bufReader.readLine()) != null) {
 
                 if (getSample() != -1) {
@@ -72,9 +73,10 @@ public abstract class FileInSearch implements FileSearch {
                     if (count >= getSample()) break;
                 }
 
-                boolean patternOn = false;  // 패턴에 맞을 경우
+                boolean patternOn = true;  // 패턴에 맞을 경우
 
                 if (getOrKeyword() != null) {
+                    patternOn = false; // or 조건절이 있을 경우, 먼저 false 처리함.
                     // 해당 배열이 or 조건으로 존재하면 무조건 true
                     for (String keyword : getOrKeyword()) {
                         if (line.contains(keyword)) {
@@ -84,13 +86,13 @@ public abstract class FileInSearch implements FileSearch {
                     }
                 }
 
-                if (getInKeyword() != null) {
+                if (getInKeyword() != null && !patternOn) {
                     // 해당 배열이 전부 있어야 함.
                     for (String keyword : getInKeyword()) {
                         // or 조건절에서 true가 있다면, and 조건절의 keyword가 없더라도  true를 유지한다.
                         // 키워드가 없거나, or 조건절의 true가 없다면... false 처리.
-                        if (!line.contains(keyword) || !patternOn) {
-                            patternOn = false;
+                        if (line.contains(keyword)) {
+                            patternOn = true;
                             break;
                         }
                     }
